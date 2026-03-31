@@ -66,6 +66,7 @@ export default function ShareAppOrScreenControlGroup(
 		useState(false);
 
 	const [isWaylandSession, setIsWaylandSession] = useState(false);
+	const [hasAutoSelected, setHasAutoSelected] = useState(false);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -149,6 +150,17 @@ export default function ShareAppOrScreenControlGroup(
 		handleWaylandShare,
 		isWaylandSession,
 	]);
+
+	// Auto-select "Entire Screen" when component mounts
+	useEffect(() => {
+		if (!hasAutoSelected && !isChooseAppOrScreenOverlayOpen) {
+			setHasAutoSelected(true);
+			// Small delay to ensure component is fully mounted
+			setTimeout(() => {
+				handleChooseEntireScreenOverlayOpen();
+			}, 100);
+		}
+	}, [hasAutoSelected, isChooseAppOrScreenOverlayOpen, handleChooseEntireScreenOverlayOpen]);
 
 	return (
 		<>
