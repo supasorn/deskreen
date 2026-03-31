@@ -160,8 +160,72 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 					roomID,
 				);
 			waitingSession.setOnDeviceConnectedCallback(onDeviceConnectedCallback);
+
+			// Send connection URL to remote PHP script
+			const sessionRoomId = waitingSession.roomID;
+			if (sessionRoomId) {
+				sendConnectionUrlToRemote(sessionRoomId).catch((error) => {
+					console.error('Failed to send connection URL to remote:', error);
+				});
+			}
 		} catch (error) {
 			console.error('Failed to create waiting sharing session', error);
+		}
+	}
+
+	async function sendConnectionUrlToRemote(roomId: string): Promise<void> {
+		try {
+			// Get local IP
+			const deskreenGlobal = getDeskreenGlobal();
+			const ip = deskreenGlobal.cliLocalIp || getMyLocalIpV4();
+			
+			console.log('[DR.PHP] Starting URL send process...');
+			console.log('[DR.PHP] Room ID:', roomId);
+			console.log('[DR.PHP] IP:', ip);
+			
+			if (!ip) {
+				console.debug('[DR.PHP] No IP address available, skipping remote URL update');
+				return;
+			}
+			
+			const port = signalingServer.port;
+			console.log('[DR.PHP] Port:', port);
+
+			// Remote PHP script URL - configured via .env
+			const remoteUrl = process.env.DESKREEN_REMOTE_URL || '';
+			console.log('[DR.PHP] Remote URL from env:', remoteUrl || '(not set)');
+			
+			if (!remoteUrl) {
+				// No remote URL configured, skip silently
+				console.log('[DR.PHP] DESKREEN_REMOTE_URL not set, skipping');
+				return;
+			}
+
+			// Build the URL with parameters
+			const url = new URL(remoteUrl);
+			url.searchParams.set('ip', ip);
+			url.searchParams.set('port', port.toString());
+			url.searchParams.set('room', roomId);
+
+			console.log(`[DR.PHP] Sending connection URL to remote: ${url.toString()}`);
+
+			// Send request using fetch (available in Node.js 18+)
+			const response = await fetch(url.toString(), {
+				method: 'GET',
+				headers: {
+					'User-Agent': 'Deskreen-CE',
+				},
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+
+			const result = await response.json();
+			console.log('[DR.PHP] Remote URL updated successfully:', result);
+		} catch (error) {
+			// Silently fail if remote update doesn't work
+			console.error('[DR.PHP] Remote URL update failed:', error);
 		}
 	}
 

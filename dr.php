@@ -77,6 +77,18 @@ if (isset($_GET['url']) || (isset($_GET['ip']) && isset($_GET['port']) && isset(
     exit;
 }
 
+if (isset($_GET['clear'])) {
+    if (file_exists($dataFile)) {
+        unlink($dataFile);
+    }
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'message' => 'Saved URL cleared'
+    ]);
+    exit;
+}
+
 // Handle redirect to saved URL
 if (file_exists($dataFile)) {
     $content = file_get_contents($dataFile);
