@@ -171,10 +171,9 @@ const DeskreenStepper = ({
 	const handleConfirmAlert = useCallback(async () => {
 		setIsAllowDeviceAlertOpen(false);
 		setIsUserAllowedConnection(true);
+
+		await window.electron.ipcRenderer.invoke(IpcEvents.SetDeviceConnectedStatus);
 		handleNext();
-		await window.electron.ipcRenderer.invoke(
-			IpcEvents.SetDeviceConnectedStatus,
-		);
 	}, [handleNext, setIsAllowDeviceAlertOpen, setIsUserAllowedConnection]);
 
 	useEffect(() => {
@@ -187,7 +186,10 @@ const DeskreenStepper = ({
 			device: Device,
 		): void => {
 			setPendingConnectionDevice(device);
-			setIsAllowDeviceAlertOpen(true);
+			// Auto confirm connection for smoother experience
+			setTimeout(() => {
+				handleConfirmAlert();
+			}, 500);
 		};
 
 		window.electron.ipcRenderer.on(
@@ -201,7 +203,11 @@ const DeskreenStepper = ({
 				handlePendingConnectionDevice,
 			);
 		};
-	}, [setIsAllowDeviceAlertOpen, setPendingConnectionDevice]);
+	}, [
+		setIsAllowDeviceAlertOpen,
+		setPendingConnectionDevice,
+		handleConfirmAlert,
+	]);
 
 	const handleUserClickedDeviceDisconnectButton =
 		useCallback(async (): Promise<void> => {

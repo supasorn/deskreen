@@ -1,6 +1,6 @@
 {
-	"Waiting for user to click ALLOW button on screen sharing device...": "Odotetaan että käyttäjä napsauttaa SALLI-painiketta ruudunjakolaitteessa...",
-	"Waiting for user to select source to share from screen sharing device...": "Odotetaan että käyttäjä valitsee ruudunjakolaitteesta lähteen joka jaetaan...",
+	"Waiting for user to click ALLOW button on screen sharing device...": "Odotetaan näytönjakolaitteen videostriimiä...",
+	"Waiting for user to select source to share from screen sharing device...": "Odotetaan videostriimiä... (valmistellaan)",
 	"My Device Info": "Tiedot laitteestani",
 	"Device Type": "Laitteen malli",
 	"Your Device IP should match with Device IP in alert popup appeared on your computer, where Deskreen-CE is running": "Laitteesi IP:n tulisi täsmätä \"Laitteen IP\" kohdassa joka näkyy ilmoiteikkunassa tietokoneella jossa Deskreen-CE on käynnissä.",

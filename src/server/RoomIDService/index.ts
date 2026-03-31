@@ -14,18 +14,7 @@ export default class RoomIDService {
 
 	getSimpleAvailableRoomID(): Promise<string> {
 		this.nextSimpleRoomID += 1;
-		return new Promise<string>((resolve, reject) => {
-			crypto.randomBytes(3, (error, buffer) => {
-				if (error) {
-					reject(error);
-					return;
-				}
-				const decimalString = parseInt(buffer.toString('hex'), 16)
-					.toString()
-					.padStart(6, '0');
-				resolve(decimalString.substring(0, 6));
-			});
-		});
+		return Promise.resolve('123456');
 	}
 
 	getShortIDStringOfAvailableRoom(): Promise<string> {

@@ -1,6 +1,6 @@
 {
-	"Waiting for user to click ALLOW button on screen sharing device...": "Väntar på att användaren ska klicka på 'TILLÅT' på skärmdelningsenheten...",
-	"Waiting for user to select source to share from screen sharing device...": "Väntar på att användaren ska välja källa att dela från skärmdelningsenhet...",
+	"Waiting for user to click ALLOW button on screen sharing device...": "Väntar på videoström från skärmdelningsenhet...",
+	"Waiting for user to select source to share from screen sharing device...": "Väntar på videoström... (förbereder)",
 	"My Device Info": "Min enhetsinformation",
 	"Device Type": "Enhetens typ",
 	"Your Device IP should match with Device IP in alert popup appeared on your computer, where Deskreen-CE is running": "Din enhets IP-adress bör matcha med 'Enhetens IP' i den varnings-popup som dyker upp på din dator där Deskreen-CE körs",

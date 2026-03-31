@@ -9,7 +9,7 @@ if (!hostname && !protocol && !primaryPort && !backupPort) {
 	hostname = 'localhost';
 	protocol = 'http';
 	primaryPort = 3131;
-	backupPort = 3132;
+	backupPort = 3131;
 }
 
 export default {

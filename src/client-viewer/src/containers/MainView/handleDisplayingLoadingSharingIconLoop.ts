@@ -11,7 +11,7 @@ export default (params: handleDisplayingLoadingSharingIconLoopParams) => {
 	} = params;
 	return () => {
 		let interval: NodeJS.Timeout;
-		if (promptStep === 3 && url === null) {
+		if (promptStep >= 1 && url === null) {
 			setIsShownLoadingSharingIcon(true);
 
 			let currentIcon = loadingSharingIconType;

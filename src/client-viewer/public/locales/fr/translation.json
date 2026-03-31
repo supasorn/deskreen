@@ -1,6 +1,6 @@
 {
-	"Waiting for user to click ALLOW button on screen sharing device...": "En attente de la validation depuis l'appareil source...",
-	"Waiting for user to select source to share from screen sharing device...": "En attente de la sélection de la source à partager depuis l'appareil source...",
+	"Waiting for user to click ALLOW button on screen sharing device...": "En attente du flux vidéo de l'appareil source...",
+	"Waiting for user to select source to share from screen sharing device...": "En attente du flux vidéo... (préparation)",
 	"My Device Info": "Mes informations d'appareil",
 	"Device Type": "Type d'appareil",
 	"Your Device IP should match with Device IP in alert popup appeared on your computer, where Deskreen-CE is running": "Votre adresse IP doit correspondre avec l'\"Adresse IP\" affiché dans la pop-up affichée sur l'ordinateur depuis lequel Deskreen-CE est lancé.",

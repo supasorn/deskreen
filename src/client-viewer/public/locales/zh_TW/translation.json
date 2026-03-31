@@ -1,6 +1,6 @@
 {
-	"Waiting for user to click ALLOW button on screen sharing device...": "正在等待使用者單擊螢幕共享裝置上的允許按鈕...",
-	"Waiting for user to select source to share from screen sharing device...": "正在等待使用者從螢幕共享裝置選擇要共享的源...",
+	"Waiting for user to click ALLOW button on screen sharing device...": "正在等待螢幕共享裝置的視訊流...",
+	"Waiting for user to select source to share from screen sharing device...": "正在等待視訊流... (準備中)",
 	"My Device Info": "我的裝置資訊",
 	"Device Type": "裝置型別",
 	"Your Device IP should match with Device IP in alert popup appeared on your computer, where Deskreen-CE is running": "您的裝置 IP 應該與執行 Deskreen-CE 的計算機上出現的警報彈出視窗中的 '裝置 IP' 相匹配。",

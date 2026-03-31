@@ -11,7 +11,6 @@ export default (params: CreatePeerConnectionUseEffectParams) => {
 		setMyDeviceDetails,
 		setConnectionIconType,
 		setIsShownTextPrompt,
-		setPromptStep,
 		setScreenSharingSourceType,
 		setDialogErrorMessage,
 		setIsErrorDialogOpen,
@@ -28,17 +27,8 @@ export default (params: CreatePeerConnectionUseEffectParams) => {
 			const UIHandler = new PeerConnectionUIHandler(
 				setMyDeviceDetails,
 				() => {
+					// Stay on step 1 (Waiting for video stream) for a smoother experience
 					setConnectionIconType(ConnectionIcon.FEED_SUBSCRIBED);
-
-					setIsShownTextPrompt(false);
-					setIsShownTextPrompt(true);
-					setPromptStep(2);
-
-					setTimeout(() => {
-						setIsShownTextPrompt(false);
-						setIsShownTextPrompt(true);
-						setPromptStep(3);
-					}, 2000);
 				},
 				setScreenSharingSourceType,
 				changeLanguage,

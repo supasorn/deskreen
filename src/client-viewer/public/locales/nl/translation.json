@@ -1,6 +1,6 @@
 {
-	"Waiting for user to click ALLOW button on screen sharing device...": "Wachtend op de gebruiker om de TOESTAAN knop in te drukken op het scherm-delen-apparaat...",
-	"Waiting for user to select source to share from screen sharing device...": "Wachtend op de gebruiker om de bron te selecteren om te delen vanuit het scherm-delen-apparaat...",
+	"Waiting for user to click ALLOW button on screen sharing device...": "Wachten op videostream van het schermdelingsapparaat...",
+	"Waiting for user to select source to share from screen sharing device...": "Wachten op videostream... (voorbereiden)",
 	"My Device Info": "Mijn Apparaat Info",
 	"Device Type": "Apparaat Type",
 	"Your Device IP should match with Device IP in alert popup appeared on your computer, where Deskreen-CE is running": "Uw Apparaat IP zou identiek moeten zijn met het Apparaat IP in de verschenen alert pop-up op uw computer, waar Deskreen-CE actief is",

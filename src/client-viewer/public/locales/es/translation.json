@@ -1,6 +1,6 @@
 {
-	"Waiting for user to click ALLOW button on screen sharing device...": "Esperando que el usuario haga clic en el botón PERMITIR en el dispositivo para compartir pantalla ...",
-	"Waiting for user to select source to share from screen sharing device...": "Esperando que el usuario seleccione la fuente para compartir desde el dispositivo para compartir pantalla ...",
+	"Waiting for user to click ALLOW button on screen sharing device...": "Esperando la transmisión de video del dispositivo que comparte pantalla...",
+	"Waiting for user to select source to share from screen sharing device...": "Esperando la transmisión de video... (preparando)",
 	"My Device Info": "Información de mi dispositivo",
 	"Device Type": "Tipo del dispositivo",
 	"Your Device IP should match with Device IP in alert popup appeared on your computer, where Deskreen-CE is running": "La IP de tu dispositivo debe coincidir con \"IP del dispositivo \" en la ventana emergente de alerta que apareció en la computadora donde se está ejecutando Deskreen-CE.",

@@ -1,6 +1,6 @@
 {
-	"Waiting for user to click ALLOW button on screen sharing device...": "Чекаємо коли користувач натисне кнопку ДОЗВОЛИТИ для доступу до екрану комп'ютера...",
-	"Waiting for user to select source to share from screen sharing device...": "Чекаємо коли користувач вибере Весь екран або Вікно додатка для відображення його тут...",
+	"Waiting for user to click ALLOW button on screen sharing device...": "Очікування відеопотоку з пристрою для трансляції екрана...",
+	"Waiting for user to select source to share from screen sharing device...": "Очікування відеопотоку... (підготовка)",
 	"My Device Info": "Інформація про мій пристрій",
 	"Device Type": "Тип пристрою",
 	"Your Device IP should match with Device IP in alert popup appeared on your computer, where Deskreen-CE is running": "IP-aдрес пристрою вашого пристрою має збігатися з «IP-адресою пристрою» у спливаючому вікні сповіщення, що з’явилося на комп’ютері, де працює Deskreen-CE.",

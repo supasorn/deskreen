@@ -13,5 +13,6 @@ export default (
 	if (peerConnection.partner.username !== '') {
 		peerConnection.toggleLockRoom(true);
 		peerConnection.emitUserEnter();
+		peerConnection.flushMessageQueue();
 	}
 };

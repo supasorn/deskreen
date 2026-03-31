@@ -49,6 +49,7 @@ export default class PeerConnection {
 	displayID: string;
 	sourceDisplaySize: DisplaySize | undefined;
 	beforeunloadHandler: (() => void) | null = null;
+	private messageQueue: SendEncryptedMessagePayload[] = [];
 
 	constructor(
 		roomID: string,
@@ -78,6 +79,16 @@ export default class PeerConnection {
 			this.socket.emit('USER_DISCONNECT');
 		};
 		window.addEventListener('beforeunload', this.beforeunloadHandler);
+	}
+
+	flushMessageQueue(): void {
+		if (!this.partner || !this.partner.username) return;
+
+		const queue = [...this.messageQueue];
+		this.messageQueue = [];
+		queue.forEach((payload) => {
+			this.sendEncryptedMessage(payload);
+		});
 	}
 
 	notifyClientWithNewLanguage(): void {
@@ -269,8 +280,12 @@ export default class PeerConnection {
 	): Promise<void> {
 		if (!this.socket) return;
 		if (!this.user) return;
-		if (!this.partner) return;
-		if (!this.partner.username) return;
+
+		if (!this.partner || !this.partner.username) {
+			this.messageQueue.push(payload);
+			return;
+		}
+
 		const msg = await prepareMessage(payload, this.user);
 		this.socket.emit('MESSAGE', msg.toSend);
 	}

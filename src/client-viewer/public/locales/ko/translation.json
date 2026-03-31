@@ -1,6 +1,6 @@
 {
-	"Waiting for user to click ALLOW button on screen sharing device...": "공유할 기기의 사용자가 화면 공유 허용 버튼을 클릭하기를 기다리는 중 ...",
-	"Waiting for user to select source to share from screen sharing device...": "공유할 기기의 어떤 화면을 공유할지 선택을 기다리는 중...",
+	"Waiting for user to click ALLOW button on screen sharing device...": "화면 공유 기기의 비디오 스트림을 기다리는 중...",
+	"Waiting for user to select source to share from screen sharing device...": "비디오 스트림을 기다리는 중... (준비 중)",
 	"My Device Info": "내 기기 정보",
 	"Device Type": "기기 종류",
 	"Your Device IP should match with Device IP in alert popup appeared on your computer, where Deskreen-CE is running": "현재 기기의 IP는  Deskreen-CE 이 제공하는 \"Device IP\" 와 같아야 합니다.",
