@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button, Text } from '@blueprintjs/core';
 import { Col, Row } from 'react-flexbox-grid';
 import { useTranslation } from 'react-i18next';
@@ -73,6 +73,26 @@ export default function IntermediateStep(
 		connectedDevice,
 		handleReset,
 	} = props;
+
+	// Auto-confirm when reaching the confirmation step
+	useEffect(() => {
+		if (isConfirmStep(activeStep, steps)) {
+			// Auto-confirm after a short delay to show the preview briefly
+			const timer = setTimeout(async () => {
+				await window.electron.ipcRenderer.invoke(
+					IpcEvents.StartSharingOnWaitingForConnectionSharingSession,
+				);
+				resetPendingConnectionDevice();
+				resetUserAllowedConnection();
+				setTimeout(() => {
+					handleReset();
+				}, 1000);
+			}, 500); // 500ms delay to show the confirmation screen briefly
+
+			return () => clearTimeout(timer);
+		}
+		return undefined;
+	}, [activeStep, steps, resetPendingConnectionDevice, resetUserAllowedConnection, handleReset]);
 
 	return (
 		<Col
