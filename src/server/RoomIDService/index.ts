@@ -1,4 +1,3 @@
-import crypto from 'crypto';
 import shortID from 'shortid';
 
 export default class RoomIDService {
