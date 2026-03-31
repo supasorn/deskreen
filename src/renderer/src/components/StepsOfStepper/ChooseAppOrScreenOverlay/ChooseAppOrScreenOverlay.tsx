@@ -103,6 +103,26 @@ export default function ChooseAppOrScreenOverlay(
 			if (cancelled) return;
 			if (ids.length > 0 || attempts >= maxAttempts) {
 				setIsLoading(false);
+				// Auto-select screen if conditions are met
+				if (isEntireScreenToShareChosen && ids.length > 0) {
+					let selectedId: string | null = null;
+					if (ids.length === 1) {
+						// Single screen: auto-select it
+						selectedId = ids[0];
+					} else if (ids.length === 2) {
+						// Two screens: auto-select the secondary one (index 1)
+						selectedId = ids[1];
+					}
+					
+					if (selectedId) {
+						await window.electron.ipcRenderer.invoke(
+							IpcEvents.SetDesktopCapturerSourceId,
+							selectedId,
+						);
+						handleNextEntireScreen();
+						handleClose();
+					}
+				}
 				return;
 			}
 			attempts += 1;
@@ -119,7 +139,7 @@ export default function ChooseAppOrScreenOverlay(
 			cancelled = true;
 			setIsLoading(false);
 		};
-	}, [isChooseAppOrScreenOverlayOpen, handleRefreshSources, isWaylandSession]);
+	}, [isChooseAppOrScreenOverlayOpen, handleRefreshSources, isWaylandSession, isEntireScreenToShareChosen, handleNextEntireScreen, handleClose]);
 
 	return (
 		<Dialog
