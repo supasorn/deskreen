@@ -38,6 +38,13 @@ i18n
 		interpolation: {
 			escapeValue: false, // react already safes from xss
 		},
+
+		// don't suspend while translations load: React 19 then holds the whole
+		// app back for its 300ms suspense fallback throttle (~1s in background
+		// tabs). Keys are the English text, so rendering them meanwhile is fine.
+		react: {
+			useSuspense: false,
+		},
 	});
 
 export default i18n;
