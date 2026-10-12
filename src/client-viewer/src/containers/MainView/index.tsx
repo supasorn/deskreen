@@ -20,6 +20,7 @@ import handleNoConnectionTimeout from './handleNoConnectionTimeout';
 import handleCreatePeerConnection from './handleCreatePeerConnection';
 import handleRemoveDanglingReactRevealContainer from './handleRemoveDanglingReactRevealContainer';
 import handleDisplayingLoadingSharingIconLoop from './handleDisplayingLoadingSharingIconLoop';
+import handleAutoFullscreen from './handleAutoFullscreen';
 import { ScreenSharingSource } from '../../features/PeerConnection/ScreenSharingSourceEnum';
 import ConnectionIcon from './ConnectionIconEnum';
 import { LoadingSharingIconEnum } from './LoadingSharingIconEnum';
@@ -97,6 +98,8 @@ function MainView() {
 	}, [playing]);
 
 	useEffect(handleRemoveDanglingReactRevealContainer(url), [url]);
+
+	useEffect(handleAutoFullscreen(url), [url]);
 
 	useEffect(
 		handleDisplayingLoadingSharingIconLoop({

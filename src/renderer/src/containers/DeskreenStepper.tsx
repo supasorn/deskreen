@@ -1,5 +1,11 @@
 // import SuccessStep from '../components/StepsOfStepper/SuccessStep';
-import React, { useState, useCallback, useEffect, ReactNode } from 'react';
+import React, {
+	useState,
+	useCallback,
+	useEffect,
+	useRef,
+	ReactNode,
+} from 'react';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import Stepper from '@material-ui/core/Stepper';
 import Step from '@material-ui/core/Step';
@@ -132,14 +138,6 @@ const DeskreenStepper = ({
 
 	const steps = getSteps(t);
 
-	const handleNext = useCallback((): void => {
-		if (activeStep === steps.length - 1) {
-			setIsEntireScreenSelected(false);
-			setIsApplicationWindowSelected(false);
-		}
-		setActiveStep((prevActiveStep: number): number => prevActiveStep + 1);
-	}, [activeStep, setActiveStep, steps]);
-
 	const handleNextEntireScreen = useCallback((): void => {
 		setActiveStep((prevActiveStep: number): number => prevActiveStep + 1);
 		setIsEntireScreenSelected(true);
@@ -173,35 +171,51 @@ const DeskreenStepper = ({
 		setIsUserAllowedConnection(true);
 
 		await window.electron.ipcRenderer.invoke(IpcEvents.SetDeviceConnectedStatus);
-		handleNext();
-	}, [handleNext, setIsAllowDeviceAlertOpen, setIsUserAllowedConnection]);
+		setActiveStep(1);
+	}, [setActiveStep, setIsAllowDeviceAlertOpen, setIsUserAllowedConnection]);
+
+	// sharing session the auto-confirm flow was last started for, and a key
+	// that remounts the steps so a new viewer always gets a fresh flow
+	const autoConfirmedSessionIdRef = useRef<string | null>(null);
+	const [sharingFlowKey, setSharingFlowKey] = useState(0);
 
 	useEffect(() => {
 		window.electron.ipcRenderer.invoke(
 			IpcEvents.CreateWaitingForConnectionSharingSession,
 		);
 
+		// the viewer can announce itself several times; confirm once
+		let autoConfirmTimeout: ReturnType<typeof setTimeout> | undefined;
 		const handlePendingConnectionDevice = (
 			_: unknown,
 			device: Device,
 		): void => {
 			setPendingConnectionDevice(device);
 			// Auto confirm connection for smoother experience
-			setTimeout(() => {
+			clearTimeout(autoConfirmTimeout);
+			autoConfirmTimeout = setTimeout(() => {
+				// same viewer announcing itself again: flow already running
+				if (autoConfirmedSessionIdRef.current === device.sharingSessionID) {
+					return;
+				}
+				autoConfirmedSessionIdRef.current = device.sharingSessionID;
+				// restart the flow even if a previous viewer left mid-way
+				setSharingFlowKey((key) => key + 1);
 				handleConfirmAlert();
 			}, 500);
 		};
 
-		window.electron.ipcRenderer.on(
-			IpcEvents.SetPendingConnectionDevice,
-			handlePendingConnectionDevice,
-		);
-
-		return () => {
-			window.electron.ipcRenderer.removeListener(
+		// use the returned disposer: removeListener can't match the listener
+		// because contextBridge wraps it in a new proxy on every call
+		const removePendingConnectionDeviceListener =
+			window.electron.ipcRenderer.on(
 				IpcEvents.SetPendingConnectionDevice,
 				handlePendingConnectionDevice,
 			);
+
+		return () => {
+			clearTimeout(autoConfirmTimeout);
+			removePendingConnectionDeviceListener();
 		};
 	}, [
 		setIsAllowDeviceAlertOpen,
@@ -224,6 +238,7 @@ const DeskreenStepper = ({
 		return (
 			<div id="intermediate-step-container" style={{ width: '100%' }}>
 				<IntermediateStep
+					key={sharingFlowKey}
 					activeStep={activeStep}
 					steps={steps}
 					handleBack={handleBack}
@@ -237,6 +252,7 @@ const DeskreenStepper = ({
 			</div>
 		);
 	}, [
+		sharingFlowKey,
 		activeStep,
 		steps,
 		handleReset,

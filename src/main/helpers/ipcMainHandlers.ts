@@ -141,6 +141,13 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 
 	ipcMain.handle(IpcEvents.UnmarkRoomIDAsTaken, (_, roomID) => {
 		const deskreenGlobal = getDeskreenGlobal();
+		// room IDs are fixed, so a new waiting session may already reuse it
+		if (
+			deskreenGlobal.sharingSessionService.waitingForConnectionSharingSession
+				?.roomID === roomID
+		) {
+			return;
+		}
 		deskreenGlobal.roomIDService.unmarkRoomIDAsTaken(roomID);
 	});
 
@@ -530,18 +537,21 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 	});
 
 	ipcMain.handle(IpcEvents.DestroySharingSessionById, (_, id) => {
-		if (
-			getDeskreenGlobal().sharingSessionService
-				.waitingForConnectionSharingSession?.id === id
-		) {
-			getDeskreenGlobal().sharingSessionService.waitingForConnectionSharingSession =
-				null;
+		const { sharingSessionService, connectedDevicesService } =
+			getDeskreenGlobal();
+		if (sharingSessionService.waitingForConnectionSharingSession?.id === id) {
+			sharingSessionService.waitingForConnectionSharingSession = null;
+			connectedDevicesService.resetPendingConnectionDevice();
 		}
-		const sharingSession =
-			getDeskreenGlobal().sharingSessionService.sharingSessions.get(id);
+		const sharingSession = sharingSessionService.sharingSessions.get(id);
 		sharingSession?.setStatus(SharingSessionStatusEnum.DESTROYED);
 		sharingSession?.destroy();
-		getDeskreenGlobal().sharingSessionService.sharingSessions.delete(id);
+		sharingSessionService.sharingSessions.delete(id);
+
+		// always keep a session waiting for the next viewer
+		if (connectedDevicesService.isSlotAvailable()) {
+			void createWaitingForConnectionSharingSession();
+		}
 	});
 
 	ipcMain.handle(IpcEvents.OpenExternalLink, (_, url: string) => {

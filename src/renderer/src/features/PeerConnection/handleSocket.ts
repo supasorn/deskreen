@@ -24,8 +24,8 @@ export default function handleSocket(peerConnection: PeerConnection): void {
 		},
 	);
 
-	peerConnection.socket.on('USER_EXIT', () => {
-		handleSocketUserExit(peerConnection);
+	peerConnection.socket.on('USER_EXIT', (users: PartnerPeerUser[]) => {
+		handleSocketUserExit(peerConnection, users);
 	});
 
 	peerConnection.socket.on(

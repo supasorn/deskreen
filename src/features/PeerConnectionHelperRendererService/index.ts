@@ -17,7 +17,8 @@ export default class RendererWebrtcHelpersService {
 		let helperRendererWindow: BrowserWindow | null = null;
 
 		helperRendererWindow = new BrowserWindow({
-			show: is.dev, // show in dev only
+			// is.dev is also true for `electron-vite preview`, so make showing opt-in
+			show: is.dev && process.env.DESKREEN_SHOW_HELPER === '1',
 			webPreferences: {
 				preload: join(__dirname, '../preload/index.js'),
 				// contextIsolation: true,

@@ -2,6 +2,7 @@ import {
 	ErrorMessage,
 	type ErrorMessageType,
 } from '../../components/ErrorDialog/ErrorMessageEnum';
+import scheduleAutoReconnect from './scheduleAutoReconnect';
 
 export default (
 	peerConnection: PeerConnection,
@@ -22,4 +23,5 @@ export default (
 		peerConnection.UIHandler.setIsErrorDialogOpen(true);
 		peerConnection.UIHandler.errorDialogMessage = errorMessage;
 	}
+	scheduleAutoReconnect();
 };

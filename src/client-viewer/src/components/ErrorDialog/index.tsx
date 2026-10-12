@@ -60,7 +60,7 @@ function ErrorDialog(props: ErrorDialogProps) {
 			<div className={Classes.DIALOG_BODY}>
 				<H3 className={Classes.TEXT_MUTED}>{t(`${errorMessage}`)}</H3>
 				<Divider />
-				<H2>{`${t('You may close this browser window then try to connect again')}.`}</H2>
+				<H2>{`${t('Reconnecting automatically')}...`}</H2>
 			</div>
 		</Dialog>
 	);

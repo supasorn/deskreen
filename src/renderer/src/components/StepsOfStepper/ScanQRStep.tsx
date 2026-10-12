@@ -100,17 +100,14 @@ const ScanQRStep: React.FC = () => {
 				console.error('Failed to get viewer slot availability:', error);
 			});
 
-		window.electron.ipcRenderer.on(
+		const removeAvailabilityListener = window.electron.ipcRenderer.on(
 			IpcEvents.ViewerConnectionAvailabilityChanged,
 			handleAvailabilityChange,
 		);
 
 		return () => {
 			cancelled = true;
-			window.electron.ipcRenderer.removeListener(
-				IpcEvents.ViewerConnectionAvailabilityChanged,
-				handleAvailabilityChange,
-			);
+			removeAvailabilityListener();
 		};
 	}, []);
 
