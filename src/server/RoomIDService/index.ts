@@ -1,5 +1,8 @@
 import shortID from 'shortid';
 
+// fixed room so the viewer URL never changes
+export const FIXED_ROOM_ID = '123456';
+
 export default class RoomIDService {
 	takenRoomIDs: Set<string>;
 
@@ -13,7 +16,7 @@ export default class RoomIDService {
 
 	getSimpleAvailableRoomID(): Promise<string> {
 		this.nextSimpleRoomID += 1;
-		return Promise.resolve('123456');
+		return Promise.resolve(FIXED_ROOM_ID);
 	}
 
 	getShortIDStringOfAvailableRoom(): Promise<string> {
@@ -31,6 +34,10 @@ export default class RoomIDService {
 	}
 
 	unmarkRoomIDAsTaken(id: string): void {
+		// keep the fixed room open between sessions, so a viewer reconnecting
+		// before the next waiting session exists isn't rejected; the signaling
+		// server still allows only one viewer at a time
+		if (id === FIXED_ROOM_ID) return;
 		this.takenRoomIDs.delete(id);
 	}
 

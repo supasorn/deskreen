@@ -257,6 +257,17 @@ export default class PeerConnection {
 		this.selfDestroy();
 	}
 
+	// tell the viewer to go away, then tear down this session: selfDestroy
+	// frees the viewer slot and a new waiting session gets created, so the
+	// viewer's auto-reconnect starts a fresh capture
+	async endSharingForReconnect(): Promise<void> {
+		await this.sendEncryptedMessage({
+			type: 'DISCONNECT_BY_HOST_MACHINE_USER',
+			payload: {},
+		});
+		this.selfDestroy();
+	}
+
 	disconnectPartner(): void {
 		this.socket.emit('DISCONNECT_SOCKET_BY_DEVICE_IP', {
 			ip: this.partnerDeviceDetails.deviceIP,

@@ -27,9 +27,9 @@ export default function handleCreatePeer(
 			peerConnection.localStream = null;
 		}
 
-		// clear old signals and reset call state when recreating peer
+		// clear old signals when recreating peer; keep isCallStarted so a call
+		// requested before the peer existed still goes through
 		peerConnection.signalsDataToCallUser = [];
-		peerConnection.isCallStarted = false;
 
 		createDesktopCapturerStream(
 			peerConnection,
@@ -56,6 +56,15 @@ export default function handleCreatePeer(
 				peerConnection.peer.on('signal', (data: string) => {
 					// fired when simple peer and webrtc done preparation to start call on peerConnection machine
 					peerConnection.signalsDataToCallUser.push(data);
+					// callPeer only sends what was gathered so far; send the rest live
+					if (peerConnection.isCallStarted) {
+						peerConnection.sendEncryptedMessage({
+							type: 'CALL_USER',
+							payload: {
+								signalData: data,
+							},
+						});
+					}
 				});
 
 				peerConnection.peer.on('data', (data) => {

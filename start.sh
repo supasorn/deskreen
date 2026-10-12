@@ -13,6 +13,12 @@ else
     echo "✓ Created .env"
 fi
 
+# Build the virtual display helper (macOS) if missing or outdated
+if [[ "$(uname)" == "Darwin" ]] && { [ ! -x resources/bin/virtual-display ] || [ native/virtual-display/main.swift -nt resources/bin/virtual-display ]; }; then
+    echo "Building virtual display helper..."
+    pnpm build:virtual-display || echo "⚠ virtual display helper build failed, continuing without it"
+fi
+
 echo ""
 echo "Starting Deskreen..."
 echo "Your sessions will be accessible at: https://www.supasorn.com/dr.php"

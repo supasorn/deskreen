@@ -17,10 +17,12 @@ import getMyLocalIpV4 from './getMyLocalIpV4';
 import isWifiConnected from './isWifiConnected';
 import { getDeskreenGlobal } from './getDeskreenGlobal';
 import { IpcEvents } from '../../common/IpcEvents.enum';
+import { Device } from '../../common/Device';
 import { ElectronStoreKeys } from '../../common/ElectronStoreKeys.enum';
 import { store } from '../../common/deskreen-electron-store';
 import DesktopCapturerSourceType from '../../common/DesktopCapturerSourceType';
 import isLinuxWaylandSession from '../utils/isLinuxWaylandSession';
+import { getVirtualDisplayID, onVirtualDisplayResized } from './virtualDisplay';
 
 export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 	ipcMain.on('client-changed-language', async (_, newLangCode) => {
@@ -141,15 +143,11 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 
 	ipcMain.handle(IpcEvents.UnmarkRoomIDAsTaken, (_, roomID) => {
 		const deskreenGlobal = getDeskreenGlobal();
-		// room IDs are fixed, so a new waiting session may already reuse it
-		if (
-			deskreenGlobal.sharingSessionService.waitingForConnectionSharingSession
-				?.roomID === roomID
-		) {
-			return;
-		}
 		deskreenGlobal.roomIDService.unmarkRoomIDAsTaken(roomID);
 	});
+
+	// concurrent callers all get the same waiting session; set it up once
+	const setUpWaitingSessions = new WeakSet<SharingSession>();
 
 	async function createWaitingForConnectionSharingSession(
 		roomID?: string,
@@ -166,7 +164,20 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 				await deskreenGlobal.sharingSessionService.createWaitingForConnectionSharingSession(
 					roomID,
 				);
-			waitingSession.setOnDeviceConnectedCallback(onDeviceConnectedCallback);
+			if (setUpWaitingSessions.has(waitingSession)) return;
+			setUpWaitingSessions.add(waitingSession);
+
+			if (getVirtualDisplayID()) {
+				// fast path: nothing to pick, so capture the virtual display right
+				// away and accept viewers directly instead of via the stepper UI
+				const prepared = prepareVirtualDisplaySharing(waitingSession);
+				waitingSession.setOnDeviceConnectedCallback(async (device) => {
+					await prepared;
+					acceptViewerDirectly(waitingSession, device);
+				});
+			} else {
+				waitingSession.setOnDeviceConnectedCallback(onDeviceConnectedCallback);
+			}
 
 			// Send connection URL to remote PHP script
 			const sessionRoomId = waitingSession.roomID;
@@ -178,6 +189,38 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 		} catch (error) {
 			console.error('Failed to create waiting sharing session', error);
 		}
+	}
+
+	async function prepareVirtualDisplaySharing(
+		sharingSession: SharingSession,
+	): Promise<void> {
+		const displayID = getVirtualDisplayID();
+		const { desktopCapturerSourcesService } = getDeskreenGlobal();
+		await desktopCapturerSourcesService.refreshDesktopCapturerSources();
+		const source = desktopCapturerSourcesService
+			.getScreenSources()
+			.find((screenSource) => screenSource.display_id === displayID);
+		if (!source) {
+			console.warn('[virtual-display] no capture source for display', displayID);
+			return;
+		}
+		sharingSession.setDesktopCapturerSourceID(source.id);
+	}
+
+	function acceptViewerDirectly(
+		sharingSession: SharingSession,
+		device: Device,
+	): void {
+		const { sharingSessionService, connectedDevicesService } =
+			getDeskreenGlobal();
+		// the viewer announces itself several times; only the first one counts
+		if (sharingSessionService.waitingForConnectionSharingSession !== sharingSession) {
+			return;
+		}
+		connectedDevicesService.setPendingConnectionDevice(device);
+		// CONNECTED tells the viewer it was allowed in
+		sharingSession.setStatus(SharingSessionStatusEnum.CONNECTED);
+		startSharingOnWaitingForConnectionSharingSession();
 	}
 
 	async function sendConnectionUrlToRemote(roomId: string): Promise<void> {
@@ -287,6 +330,7 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 
 	mainWindow.on('closed', () => {
 		removeViewerAvailabilityListener();
+		removeVirtualDisplayResizedListener();
 	});
 
 	ipcMain.handle(IpcEvents.SetDeviceConnectedStatus, () => {
@@ -329,6 +373,18 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 			);
 		},
 	);
+
+	// capture size is fixed when sharing starts, so after a resolution change
+	// end the session; the viewer auto-reconnects and captures at the new size
+	const removeVirtualDisplayResizedListener = onVirtualDisplayResized(() => {
+		getDeskreenGlobal().sharingSessionService.sharingSessions.forEach(
+			(sharingSession) => {
+				if (sharingSession.status === SharingSessionStatusEnum.SHARING) {
+					sharingSession.endSharingForReconnect();
+				}
+			},
+		);
+	});
 
 	ipcMain.handle(
 		IpcEvents.GetDesktopCapturerSourceIdBySharingSessionId,
@@ -508,6 +564,15 @@ export const initIpcMainHandlers = (mainWindow: BrowserWindow): void => {
 				.map((source) => source.id);
 		},
 	);
+
+	ipcMain.handle(IpcEvents.GetVirtualDisplaySourceId, () => {
+		const displayID = getVirtualDisplayID();
+		if (!displayID) return null;
+		const source = getDeskreenGlobal()
+			.desktopCapturerSourcesService.getScreenSources()
+			.find((screenSource) => screenSource.display_id === displayID);
+		return source?.id ?? null;
+	});
 
 	ipcMain.handle(IpcEvents.SetDesktopCapturerSourceId, (_, id) => {
 		getDeskreenGlobal().sharingSessionService.waitingForConnectionSharingSession?.setDesktopCapturerSourceID(

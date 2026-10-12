@@ -31,4 +31,5 @@ export enum IpcEvents {
 	GetPort = 'get-port',
 	OpenExternalLink = 'open-external-link',
 	WriteTextToClipboard = 'write-text-to-clipboard',
+	GetVirtualDisplaySourceId = 'get-virtual-display-source-id',
 }

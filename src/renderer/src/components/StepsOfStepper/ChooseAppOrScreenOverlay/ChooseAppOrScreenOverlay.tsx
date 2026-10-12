@@ -105,15 +105,20 @@ export default function ChooseAppOrScreenOverlay(
 				setIsLoading(false);
 				// Auto-select screen if conditions are met
 				if (isEntireScreenToShareChosen && ids.length > 0) {
-					let selectedId: string | null = null;
-					if (ids.length === 1) {
+					// prefer the virtual display Deskreen created, if any
+					let selectedId: string | null =
+						await window.electron.ipcRenderer.invoke(
+							IpcEvents.GetVirtualDisplaySourceId,
+						);
+					if (cancelled) return;
+					if (!selectedId && ids.length === 1) {
 						// Single screen: auto-select it
 						selectedId = ids[0];
-					} else if (ids.length === 2) {
+					} else if (!selectedId && ids.length === 2) {
 						// Two screens: auto-select the secondary one (index 1)
 						selectedId = ids[1];
 					}
-					
+
 					if (selectedId) {
 						await window.electron.ipcRenderer.invoke(
 							IpcEvents.SetDesktopCapturerSourceId,

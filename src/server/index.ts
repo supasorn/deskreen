@@ -34,7 +34,8 @@ const ioHandleOnConnection = (socket): void => {
 	const { roomId } = socket.handshake.query;
 	const store = getStore();
 
-	setTimeout(async () => {
+	// no throttling delay: the room ID is fixed, so there is nothing to guess
+	void (async () => {
 		if (!getDeskreenGlobal().roomIDService.isRoomIDTaken(roomId)) {
 			socket.emit('NOT_ALLOWED');
 			setTimeout(() => {
@@ -54,8 +55,7 @@ const ioHandleOnConnection = (socket): void => {
 			socket,
 			room: parsedRoom as Room,
 		});
-		// }
-	}, 500); // timeout 500 millisecond for throttling malicious connections
+	})();
 };
 
 function setStaticFileHeaders(

@@ -33,6 +33,8 @@ const loadDevelopmentText = (): void => {
 export function handleIpcRenderer(): void {
 	window.electron.ipcRenderer.on('start-peer-connection', () => {
 		let peerConnection: PeerConnection | undefined;
+		// source sent before the PeerConnection finished being created
+		let pendingDesktopCapturerSourceID: string | undefined;
 
 		window.electron.ipcRenderer.on(
 			'create-peer-connection-with-data',
@@ -56,6 +58,13 @@ export function handleIpcRenderer(): void {
 				peerConnection.setOnDeviceConnectedCallback((deviceData) => {
 					window.electron.ipcRenderer.send('peer-connected', deviceData);
 				});
+
+				if (pendingDesktopCapturerSourceID) {
+					peerConnection.setDesktopCapturerSourceID(
+						pendingDesktopCapturerSourceID,
+					);
+					pendingDesktopCapturerSourceID = undefined;
+				}
 			},
 		);
 
@@ -64,6 +73,8 @@ export function handleIpcRenderer(): void {
 			(_, id) => {
 				if (peerConnection) {
 					peerConnection.setDesktopCapturerSourceID(id);
+				} else {
+					pendingDesktopCapturerSourceID = id;
 				}
 			},
 		);
@@ -82,6 +93,12 @@ export function handleIpcRenderer(): void {
 				}
 			},
 		);
+
+		window.electron.ipcRenderer.on('end-sharing-for-reconnect', () => {
+			if (peerConnection) {
+				peerConnection.endSharingForReconnect();
+			}
+		});
 
 		window.electron.ipcRenderer.on('deny-connection-for-partner', () => {
 			if (peerConnection) {

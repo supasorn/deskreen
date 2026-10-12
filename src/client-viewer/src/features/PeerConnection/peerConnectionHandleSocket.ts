@@ -71,9 +71,12 @@ export default (peerConnection: PeerConnection) => {
 			clearTimeout(peerConnection.getMyIPTimeout);
 		}
 
-		peerConnection.getMyIPTimeout = setTimeout(() => {
-			if (!isAllowed) return;
+		// ask right away and retry quickly: the server may not have registered
+		// its handlers yet, and events sent before that are dropped
+		const requestMyIP = () => {
+			if (!isAllowed || ipCallbackReceived) return;
 			socket.emit('GET_MY_IP', (ip: string) => {
+				if (ipCallbackReceived) return;
 				console.log('GET_MY_IP', ip);
 				ipCallbackReceived = true;
 				if (peerConnection.reconnectTimeout) {
@@ -82,7 +85,9 @@ export default (peerConnection: PeerConnection) => {
 				}
 				getMyIPCallback(peerConnection, ip, window.navigator.userAgent);
 			});
-		}, 500);
+			peerConnection.getMyIPTimeout = setTimeout(requestMyIP, 250);
+		};
+		requestMyIP();
 	});
 
 	socket.on('NOT_ALLOWED', () => {

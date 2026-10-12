@@ -23,6 +23,7 @@ export default class SharingSession {
 	peerConnectionHelperRenderer: BrowserWindow | undefined;
 	onDeviceConnectedCallback: undefined | ((device: Device) => void);
 	desktopCapturerSourceID: string;
+	isHelperRendererLoaded = false;
 
 	constructor(
 		_roomID: string,
@@ -59,6 +60,14 @@ export default class SharingSession {
 					user,
 				},
 			);
+			this.isHelperRendererLoaded = true;
+			// a source set before the helper finished loading would have been lost
+			if (this.desktopCapturerSourceID) {
+				this.peerConnectionHelperRenderer?.webContents.send(
+					'set-desktop-capturer-source-id',
+					this.desktopCapturerSourceID,
+				);
+			}
 		});
 
 		this.peerConnectionHelperRenderer.webContents.on(
@@ -92,6 +101,8 @@ export default class SharingSession {
 	setDesktopCapturerSourceID(id: string): void {
 		this.desktopCapturerSourceID = id;
 		if (process.env.RUN_MODE === 'test') return;
+		// sent on load otherwise
+		if (!this.isHelperRendererLoaded) return;
 		this.peerConnectionHelperRenderer?.webContents.send(
 			'set-desktop-capturer-source-id',
 			id,
@@ -107,6 +118,12 @@ export default class SharingSession {
 		this.peerConnectionHelperRenderer?.webContents.send(
 			'disconnect-by-host-machine-user',
 			this.deviceID,
+		);
+	}
+
+	endSharingForReconnect(): void {
+		this.peerConnectionHelperRenderer?.webContents.send(
+			'end-sharing-for-reconnect',
 		);
 	}
 

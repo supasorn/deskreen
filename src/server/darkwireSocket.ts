@@ -19,6 +19,11 @@ interface SocketOPTS {
 	roomIdOriginal: string;
 }
 
+// socket.io v4 keeps connected sockets in a Map
+function getConnectedSocket(socketID: string): Io.Socket | undefined {
+	return socketIOServerStore.getServer().sockets.sockets.get(socketID);
+}
+
 function isLocalhostSocket(socket: Io.Socket) {
 	const remoteAddress = socket.request.socket.remoteAddress ?? '';
 	return remoteAddress.includes(LOCALHOST_SOCKET_IP);
@@ -119,9 +124,9 @@ export default class Socket implements SocketOPTS {
 			const socketIDToDisconnect = socketsIPService.getSocketIDByIP(payload.ip);
 			if (!socketIDToDisconnect) return;
 
-			this.handleDisconnect(
-				socketIOServerStore.getServer().sockets.sockets[socketIDToDisconnect],
-			);
+			const socketToDisconnect = getConnectedSocket(socketIDToDisconnect);
+			if (!socketToDisconnect) return;
+			this.handleDisconnect(socketToDisconnect);
 		});
 
 		this.socket.on('USER_ENTER', async (payload) => {
@@ -220,8 +225,19 @@ export default class Socket implements SocketOPTS {
 		};
 
 		if (isOwnerUser) {
-			this.disconnectAllUsers(newRoom);
-			await this.destroyRoom();
+			// the viewer's host is gone; a new host session may already be here
+			const remainingUsers = (room.users || []).filter(
+				(u) => u.socketId !== socket.id,
+			);
+			const remainingOwners = remainingUsers.filter((u) => u.isOwner);
+			if (remainingOwners.length > 0) {
+				await this.saveRoom({ ...room, users: remainingOwners, isLocked: false });
+			} else {
+				await this.destroyRoom();
+			}
+			// only after saving: each viewer's own disconnect handler re-reads
+			// the room and would otherwise write the stale version back
+			this.disconnectUsers(remainingUsers.filter((u) => !u.isOwner));
 		} else {
 			await this.saveRoom(newRoom);
 		}
@@ -234,13 +250,9 @@ export default class Socket implements SocketOPTS {
 		socket.disconnect(true);
 	}
 
-	disconnectAllUsers(room: Room): void {
-		room.users.forEach((u) => {
-			if (socketIOServerStore.getServer().sockets.sockets[u.socketId]) {
-				socketIOServerStore
-					.getServer()
-					.sockets.sockets[u.socketId].disconnect();
-			}
+	disconnectUsers(users: Room['users']): void {
+		users.forEach((u) => {
+			getConnectedSocket(u.socketId)?.disconnect(true);
 		});
 	}
 }

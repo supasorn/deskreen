@@ -1,3 +1,4 @@
+const FIRST_RETRY_DELAY_MS = 500;
 const RETRY_INTERVAL_MS = 2000;
 
 let isScheduled = false;
@@ -24,5 +25,5 @@ export default function scheduleAutoReconnect(): void {
 		setTimeout(attempt, RETRY_INTERVAL_MS);
 	};
 
-	setTimeout(attempt, RETRY_INTERVAL_MS);
+	setTimeout(attempt, FIRST_RETRY_DELAY_MS);
 }

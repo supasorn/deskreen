@@ -94,6 +94,7 @@ import { initIpcMainHandlers } from './helpers/ipcMainHandlers';
 import { initGlobals } from './helpers/initGlobals';
 import { ElectronStoreKeys } from '../common/ElectronStoreKeys.enum';
 import { getDeskreenGlobal } from './helpers/getDeskreenGlobal';
+import { startVirtualDisplay, stopVirtualDisplay } from './helpers/virtualDisplay';
 import { startLogBufferCleanup } from './utils/LoggerWithFilePrefix';
 
 export default class DeskreenApp {
@@ -126,9 +127,16 @@ export default class DeskreenApp {
 			// start log buffer cleanup to prevent memory bloat
 			startLogBufferCleanup();
 
+			// create the virtual display before the window so it is shareable
+			await startVirtualDisplay();
+
 			await this.createWindow();
 
 			void this.checkForLatestVersionAndNotify();
+		});
+
+		app.on('will-quit', () => {
+			stopVirtualDisplay();
 		});
 
 		app.on('browser-window-created', (_, window) => {
