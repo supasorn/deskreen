@@ -5,6 +5,8 @@
  * */
 
 import http from 'http';
+import https from 'https';
+import net from 'net';
 import Koa from 'koa';
 import crypto from 'crypto';
 import { Server } from 'socket.io';
@@ -22,6 +24,12 @@ import DarkwireSocket from './darkwireSocket';
 import getStore from './store';
 import { getDeskreenGlobal } from '../main/helpers/getDeskreenGlobal';
 import getMyLocalIpV4 from '../main/helpers/getMyLocalIpV4';
+import getSelfSignedCertificate from './selfSignedCertificate';
+
+const TLS_HANDSHAKE_FIRST_BYTE = 0x16;
+
+const isLocalAddress = (address: string): boolean =>
+	address.includes('127.0.0.1') || address === '::1';
 import { getClientViewerDistPath } from './getClientViewerDistPath';
 
 const { hostname, primaryPort, backupPort } = config;
@@ -78,6 +86,15 @@ class DeskreenSignalingServer {
 
 	server = {} as unknown as http.Server;
 
+	// serves the viewer to remote devices; the plain HTTP server stays for the
+	// host's own local socket and redirects remote page loads here
+	httpsServer: https.Server | null = null;
+
+	// port 3131 accepts both: routes each connection by its first byte
+	frontDoor: net.Server | null = null;
+
+	io: Server | null = null;
+
 	hostname: string;
 
 	primaryPort: number;
@@ -112,6 +129,20 @@ class DeskreenSignalingServer {
 		this.app = new Koa();
 		const router = new Router();
 
+		// remote viewers must load over HTTPS: WebCodecs, used for the
+		// low-latency video path, only exists in secure contexts
+		this.app.use(async (ctx, next) => {
+			if (
+				!ctx.secure &&
+				ctx.method === 'GET' &&
+				!ctx.path.startsWith('/socket.io') &&
+				!isLocalAddress(ctx.ip)
+			) {
+				ctx.redirect(`https://${ctx.hostname}:${this.port}${ctx.url}`);
+				return;
+			}
+			await next();
+		});
 		this.app.use(cors());
 		this.app.use(router.routes());
 
@@ -154,10 +185,32 @@ class DeskreenSignalingServer {
 		});
 
 		socketIOServerStore.setServer(io);
+		this.io = io;
+	}
+
+	createFrontDoor(): net.Server {
+		const { key, cert } = getSelfSignedCertificate();
+		this.httpsServer = https.createServer({ key, cert }, this.app?.callback());
+		this.io?.attach(this.httpsServer);
+
+		return net.createServer((socket) => {
+			socket.on('error', () => socket.destroy());
+			socket.once('data', (firstChunk) => {
+				socket.pause();
+				socket.unshift(firstChunk);
+				const target =
+					firstChunk[0] === TLS_HANDSHAKE_FIRST_BYTE
+						? this.httpsServer
+						: this.server;
+				target?.emit('connection', socket);
+				process.nextTick(() => socket.resume());
+			});
+		});
 	}
 
 	async start(): Promise<http.Server> {
 		startPollForInactiveRooms();
+		this.frontDoor = this.createFrontDoor();
 		this.server = await this.callListenOnHttpServer();
 		return this.server;
 	}
@@ -168,7 +221,7 @@ class DeskreenSignalingServer {
 				`Deskreen CE signaling server is online at port ${this.port}`,
 			);
 			this.log.info(
-				`🌐 Server available at http://${this.hostname}:${this.port}`,
+				`🌐 Server available at https://${this.hostname}:${this.port}`,
 			);
 		};
 	}
@@ -177,10 +230,10 @@ class DeskreenSignalingServer {
 		return new Promise<http.Server>((resolve, reject) => {
 			const tryListen = (port: number): void => {
 				// Remove any previous error listeners
-				this.server.removeAllListeners('error');
+				this.frontDoor?.removeAllListeners('error');
 
 				// Set up error handler
-				this.server.once('error', async (error: NodeJS.ErrnoException) => {
+				this.frontDoor?.once('error', async (error: NodeJS.ErrnoException) => {
 					if (
 						error.code === 'EADDRINUSE' &&
 						(port === this.primaryPort || port === this.backupPort)
@@ -220,7 +273,7 @@ class DeskreenSignalingServer {
 				});
 
 				// Attempt to listen on all interfaces (0.0.0.0) to allow both local and local network access
-				this.server.listen(port, '0.0.0.0', () => {
+				this.frontDoor?.listen(port, '0.0.0.0', () => {
 					this.listenCallback()();
 					resolve(this.server);
 				});
@@ -232,7 +285,9 @@ class DeskreenSignalingServer {
 	}
 
 	stop(): void {
+		this.frontDoor?.close();
 		this.server.close();
+		this.httpsServer?.close();
 	}
 }
 

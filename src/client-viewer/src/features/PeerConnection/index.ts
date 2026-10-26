@@ -11,6 +11,7 @@ import {
 } from '../../utils/message';
 import setSdpMediaBitrate from './setSdpMediaBitrate';
 import setSdpVideoBitrateFloor from './setSdpVideoBitrateFloor';
+import WebCodecsReceiver from './webCodecsReceiver';
 import VideoAutoQualityOptimizer from '../VideoAutoQualityOptimizer';
 import {
 	VideoQuality,
@@ -60,6 +61,10 @@ export default class PeerConnection {
 	videoAutoQualityOptimizer: VideoAutoQualityOptimizer;
 
 	isStreamStarted: boolean = false;
+
+	webCodecsReceiver: WebCodecsReceiver | null = null;
+
+	isWebCodecsActive: boolean = false;
 
 	UIHandler: PeerConnectionUIHandler;
 
@@ -117,6 +122,9 @@ export default class PeerConnection {
 		// stop the video stream by clearing the stream URL
 		this.setUrlCallback(null);
 		this.isStreamStarted = false;
+		this.webCodecsReceiver?.close();
+		this.webCodecsReceiver = null;
+		this.isWebCodecsActive = false;
 
 		// destroy the peer connection
 		if (this.peer) {

@@ -98,7 +98,8 @@ function VideoJSPlayer(props: VideoJSPlayerProps) {
 			// eslint-disable-next-line no-console
 			console.error('Failed to attach MediaStream to element', e);
 		}
-	}, [stream, playing]);
+		// containerEl: the stream can arrive before the player element exists
+	}, [stream, playing, containerEl]);
 
 	useEffect(() => {
 		const player = playerRef.current;

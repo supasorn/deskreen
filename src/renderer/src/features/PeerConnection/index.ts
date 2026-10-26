@@ -16,6 +16,7 @@ import { Device } from '../../../../common/Device';
 import { LocalPeerUser } from '../../../../common/LocalPeerUser';
 import type { SendEncryptedMessagePayload } from '../../../../common/SendEncryptedMessagePayload';
 import { Socket } from 'socket.io-client';
+import WebCodecsSender from './webCodecsSender';
 
 type DisplaySize = { width: number; height: number };
 
@@ -49,6 +50,7 @@ export default class PeerConnection {
 	displayID: string;
 	sourceDisplaySize: DisplaySize | undefined;
 	beforeunloadHandler: (() => void) | null = null;
+	webCodecsSender: WebCodecsSender | null = null;
 	private messageQueue: SendEncryptedMessagePayload[] = [];
 
 	constructor(

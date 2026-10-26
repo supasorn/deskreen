@@ -6,6 +6,8 @@ export default function handleSelfDestroy(
 	peerConnection: PeerConnection,
 ): void {
 	peerConnection.partner = NullUser;
+	peerConnection.webCodecsSender?.stop();
+	peerConnection.webCodecsSender = null;
 	window.electron.ipcRenderer.invoke(
 		IpcEvents.DisconnectDeviceById,
 		peerConnection.partnerDeviceDetails.id,
