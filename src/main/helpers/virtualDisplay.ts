@@ -4,7 +4,7 @@ import { join } from 'path';
 import { app } from 'electron';
 
 // Virtual display (DeskPad-like) created by resources/bin/virtual-display.
-// Configure with DESKREEN_VIRTUAL_DISPLAY=<WIDTHxHEIGHT> (default 1920x1080)
+// Configure with DESKREEN_VIRTUAL_DISPLAY=<WIDTHxHEIGHT> (default 1280x800)
 // or DESKREEN_VIRTUAL_DISPLAY=off, and DESKREEN_VIRTUAL_DISPLAY_HIDPI=1.
 
 const START_TIMEOUT_MS = 5000;
@@ -26,7 +26,7 @@ export function getVirtualDisplayID(): string | null {
 }
 
 export function startVirtualDisplay(): Promise<string | null> {
-	const config = process.env.DESKREEN_VIRTUAL_DISPLAY || '1920x1080';
+	const config = process.env.DESKREEN_VIRTUAL_DISPLAY || '1280x800';
 	if (process.platform !== 'darwin' || config === 'off') {
 		return Promise.resolve(null);
 	}

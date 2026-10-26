@@ -9,8 +9,8 @@
 import CoreGraphics
 import Foundation
 
-var width: UInt32 = 1920
-var height: UInt32 = 1080
+var width: UInt32 = 1280
+var height: UInt32 = 800
 var hiDPI = false
 
 for arg in CommandLine.arguments.dropFirst() {
@@ -30,7 +30,7 @@ for arg in CommandLine.arguments.dropFirst() {
 // Offer common resolutions so the size can be changed in System Settings >
 // Displays while running. The requested size comes first: it is the default.
 let commonSizes: [(UInt32, UInt32)] = [
-	(1280, 720), (1440, 900), (1600, 900), (1680, 1050), (1920, 1080),
+	(1280, 720), (1280, 800), (1440, 900), (1600, 900), (1680, 1050), (1920, 1080),
 	(1920, 1200), (2560, 1440), (2560, 1600), (3200, 1800), (3840, 2160),
 ]
 let sizes = [(width, height)] + commonSizes.filter { $0 != (width, height) }
@@ -67,6 +67,17 @@ settings.modes = sizes.map {
 guard display.apply(settings) else {
 	FileHandle.standardError.write("failed to apply virtual display settings\n".data(using: .utf8)!)
 	exit(1)
+}
+
+// macOS remembers the last mode it used for this display (e.g. one picked in
+// System Settings), so switch to the requested size explicitly on start
+let requestedMode = (CGDisplayCopyAllDisplayModes(display.displayID, nil) as? [CGDisplayMode])?
+	.first { $0.width == Int(width) && $0.height == Int(height) }
+if let requestedMode, CGDisplayBounds(display.displayID).size != CGSize(width: Int(width), height: Int(height)) {
+	var config: CGDisplayConfigRef?
+	CGBeginDisplayConfiguration(&config)
+	CGConfigureDisplayWithDisplayMode(config, display.displayID, requestedMode, nil)
+	CGCompleteDisplayConfiguration(config, .permanently)
 }
 
 print("DISPLAY_ID=\(display.displayID)")

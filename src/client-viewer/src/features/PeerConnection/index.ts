@@ -10,6 +10,7 @@ import {
 	type ProcessedPayload,
 } from '../../utils/message';
 import setSdpMediaBitrate from './setSdpMediaBitrate';
+import setSdpVideoBitrateFloor from './setSdpVideoBitrateFloor';
 import VideoAutoQualityOptimizer from '../VideoAutoQualityOptimizer';
 import {
 	VideoQuality,
@@ -201,6 +202,11 @@ export default class PeerConnection {
 					newSDP as unknown as string,
 					'video',
 					500000,
+				) as unknown as typeof sdp;
+				newSDP = setSdpVideoBitrateFloor(
+					newSDP as unknown as string,
+					20000,
+					30000,
 				) as unknown as typeof sdp;
 				return newSDP;
 			},
